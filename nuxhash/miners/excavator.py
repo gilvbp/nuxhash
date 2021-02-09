@@ -218,13 +218,16 @@ class ExcavatorServer(object):
             algorithm_instance.grab()
 
         # Create worker.
-        device_id = self._device_map[device.pci_bus]
-        if benchmarking:
-            response = self.send_command(
+        if device.pci_bus in self._device_map.keys():
+            device_id = self._device_map[device.pci_bus]
+            if benchmarking:
+                response = self.send_command(
                     'worker.add', [f'benchmark-{algorithm}', device_id])
+            else:
+                response = self.send_command('worker.add', [algorithm, device_id])
+            self._running_workers[(algorithm, device)] = response['worker_id']
         else:
-            response = self.send_command('worker.add', [algorithm, device_id])
-        self._running_workers[(algorithm, device)] = response['worker_id']
+            print("No worker on GPU", device)
 
     def stop_work(self, algorithm, device):
         """Stop running algorithm on device."""
